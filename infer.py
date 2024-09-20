@@ -107,7 +107,7 @@ class TGS(torch.nn.Module, SaverMixin):
 
         camera_feats = self.camera_embedder(camera_feats)
 
-        input_image_tokens: Float[Tensor, "B Cit Nit"] = self.image_tokenizer(
+        input_image_tokens: Float[Tensor, "B Cit Nit"] = self.image_tokenizer( # type: ignore
             rearrange(batch["rgb_cond"], 'B Nv H W C -> B Nv C H W'),
             modulation_cond=camera_feats,
         )
@@ -126,7 +126,7 @@ class TGS(torch.nn.Module, SaverMixin):
         proj_feats = points_projection(pointclouds, c2w_cond, intrinsic_cond, image_features)
 
         point_cond_embeddings = self.point_encoder(torch.cat([pointclouds, proj_feats], dim=-1))
-        tokens: Float[Tensor, "B Ct Nt"] = self.tokenizer(batch_size, cond_embeddings=point_cond_embeddings)
+        tokens: Float[Tensor, "B Ct Nt"] = self.tokenizer(batch_size, cond_embeddings=point_cond_embeddings) # type: ignore
 
         tokens = self.backbone(
             tokens,
