@@ -196,7 +196,7 @@ def launch(port):
                 inputs=[seg_image, camera_dist_slider, trial_dir],
                 outputs=[output_video])
 
-        launch_args = {"server_port": port}
+        launch_args = {"server_port": port, "share": True}
         demo.queue(max_size=10)
         demo.launch(**launch_args)
 
