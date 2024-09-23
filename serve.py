@@ -10,6 +10,7 @@ from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
 from typing import Optional
+import time
 
 CACHE_EXAMPLES = os.environ.get("CACHE_EXAMPLES", "0") == "1"
 DEFAULT_CAM_DIST = 1.9
@@ -114,6 +115,7 @@ async def generate(prompt: str = Form()):
 async def test(
     prompt: str = Form(),
 ):
+    start_time = time.time()
     validation_prompt = prompt
     input_image = diffusers.generate_image(prompt)
 
@@ -129,7 +131,9 @@ async def test(
     buffer = base64.b64encode(buffer.getbuffer()).decode("utf-8")
     response = requests.post("http://localhost:8094/validate_ply/", json={"prompt": validation_prompt, "data": buffer, "data_ver": 1})
     score = response.json().get("score", 0)
+    end_time = time.time()
     print(f"Prompt: {prompt.strip()}, Score: {score}")
+    print(f"Time taken: {end_time-start_time}")
     return score
 
 if __name__ == "__main__":
