@@ -9,7 +9,7 @@ from time import time
 from omegaconf import OmegaConf
 import base64
 import threading
-from diffusers import DiffusionPipeline,DDIMScheduler
+from diffusers import AutoPipelineForText2Image, DPMSolverMultistepScheduler
 import torch
 from pydantic import BaseModel
 from io import BytesIO
@@ -38,14 +38,13 @@ class DiffUsers:
     def __init__(self):
 
         print("setting up model")
-        self.device = torch.device(
-            "cuda" if torch.cuda.is_available() else "mps")
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
-        self.pipeline = DiffusionPipeline.from_pretrained(base_model_id, torch_dtype=torch.float16, variant="fp16").to(self.device)
-        self.pipeline.load_lora_weights(hf_hub_download(repo_name, ckpt_name))
-        self.pipeline.fuse_lora()
+        self.pipeline = AutoPipelineForText2Image.from_pretrained('lykon/dreamshaper-xl-turbo', torch_dtype=torch.float16, variant="fp16")
 
-        self.pipeline.scheduler = DDIMScheduler.from_config(self.pipeline.scheduler.config, timestep_spacing="trailing")
+        self.pipeline.scheduler = DPMSolverMultistepScheduler.from_config(self.pipeline.scheduler.config)
+
+        self.pipeline.to(self.device)
 
 
         self.steps = 8
