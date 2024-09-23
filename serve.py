@@ -15,7 +15,6 @@ CACHE_EXAMPLES = os.environ.get("CACHE_EXAMPLES", "0") == "1"
 DEFAULT_CAM_DIST = 1.9
 
 from image_preprocess.utils import image_preprocess, resize_image, sam_out_nosave, pred_bbox, sam_init
-from gradio_splatting.backend.gradio_model3dgs import Model3DGS
 from tgs.data import CustomImageOrbitDataset
 from tgs.utils.misc import todevice
 from tgs.utils.config import ExperimentConfig, load_config
