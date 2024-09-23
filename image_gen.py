@@ -40,7 +40,7 @@ class DiffUsers:
         print("setting up model")
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
-        self.pipeline = AutoPipelineForText2Image.from_pretrained('lykon/dreamshaper-xl-turbo', torch_dtype=torch.float16, variant="fp16")
+        self.pipeline = AutoPipelineForText2Image.from_pretrained('lykon/dreamshaper-xl-v2-turbo', torch_dtype=torch.float16, variant="fp16")
 
         self.pipeline.scheduler = DPMSolverMultistepScheduler.from_config(self.pipeline.scheduler.config)
 
