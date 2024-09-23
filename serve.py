@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 from copy import deepcopy
 import tempfile
 from functools import partial
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
 from typing import Optional
@@ -19,7 +19,10 @@ from tgs.data import CustomImageOrbitDataset
 from tgs.utils.misc import todevice
 from tgs.utils.config import ExperimentConfig, load_config
 from infer import TGS
-
+from image_gen import DiffUsers
+import base64
+import requests
+import io
 from huggingface_hub import hf_hub_download
 MODEL_CKPT_PATH = hf_hub_download(repo_id="VAST-AI/TriplaneGaussian", local_dir="./checkpoints", filename="model_lvis_rel.ckpt", repo_type="model")
 SAM_CKPT_PATH = "checkpoints/sam_vit_h_4b8939.pth"
@@ -41,6 +44,7 @@ model = TGS(cfg=base_cfg.system).to(device)
 print("load model ckpt done.")
 
 app = FastAPI()
+diffusers = DiffUsers()
 
 @app.on_event("startup")
 async def startup_event():
@@ -86,19 +90,53 @@ def infer(image_path: str,
         batch = todevice(batch, device)
         model(batch)
 
-@app.post("/run")
-async def run(image: UploadFile = File(...)):
-    assert_input_image(image)
+@app.post("/generate")
+async def generate(prompt: str = Form()):
+    validation_prompt = prompt
+    input_image = diffusers.generate_image(prompt)
+
     save_path = init_trial_dir()
-    input_image = await image.read()
+
     seg_image_path = preprocess(input_image, sam_predictor)
     infer(seg_image_path, DEFAULT_CAM_DIST, only_3dgs=True)
     gs = glob.glob(os.path.join(save_path, "3dgs", "*.ply"))[0]
-    return FileResponse(gs)
+    buffer = io.BytesIO()
+    with open(gs, 'rb') as f:
+        buffer = f.write(f.read())
+    buffer.seek(0)
+    buffer = base64.b64encode(buffer.getbuffer()).decode("utf-8")
+    response = requests.post("http://localhost:8094/validate_ply/", json={"prompt": validation_prompt, "data": buffer, "data_ver": 1})
+    score = response.json().get("score", 0)
+    print(f"Prompt: {prompt.strip()}, Score: {score}")
+    return buffer
+
+@app.post("/test/")
+async def test(
+    prompt: str = Form(),
+    # config: OmegaConf = Depends(get_config),
+    # models: list = Depends(get_models),
+):
+    validation_prompt = prompt
+    input_image = diffusers.generate_image(prompt)
+
+    save_path = init_trial_dir()
+
+    seg_image_path = preprocess(input_image, sam_predictor)
+    infer(seg_image_path, DEFAULT_CAM_DIST, only_3dgs=True)
+    gs = glob.glob(os.path.join(save_path, "3dgs", "*.ply"))[0]
+    buffer = io.BytesIO()
+    with open(gs, 'rb') as f:
+        buffer = f.write(f.read())
+    buffer.seek(0)
+    buffer = base64.b64encode(buffer.getbuffer()).decode("utf-8")
+    response = requests.post("http://localhost:8094/validate_ply/", json={"prompt": validation_prompt, "data": buffer, "data_ver": 1})
+    score = response.json().get("score", 0)
+    print(f"Prompt: {prompt.strip()}, Score: {score}")
+    return score
 
 if __name__ == "__main__":
     import uvicorn
     parser = argparse.ArgumentParser()
-    parser.add_argument("--port", type=int, default=8888)
+    parser.add_argument("--port", type=int, default=8093)
     args = parser.parse_args()
     uvicorn.run(app, host="0.0.0.0", port=args.port)
