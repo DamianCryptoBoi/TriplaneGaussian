@@ -42,7 +42,7 @@ CUDA_HOME=${CONDA_PREFIX}
 # cd ..
 
 pip install torch torchaudio torchvision
-cd TGS/tgs/models/snowflake/pointnet2_ops_lib && python setup.py install && cd -
+cd tgs/models/snowflake/pointnet2_ops_lib && python setup.py install && cd -
 pip install git+https://github.com/rusty1s/pytorch_scatter.git
 pip install git+https://github.com/graphdeco-inria/diff-gaussian-rasterization.git
 pip install -r requirements.txt
