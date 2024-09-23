@@ -10,11 +10,13 @@ from omegaconf import OmegaConf
 import base64
 import threading
 from diffusers import AutoPipelineForText2Image, DPMSolverMultistepScheduler
+from diffusers import StableDiffusionXLPipeline, LCMScheduler
 import torch
 from pydantic import BaseModel
 from io import BytesIO
 from huggingface_hub import hf_hub_download
 import os
+from safetensors.torch import load_file
 
 
 
@@ -40,15 +42,17 @@ class DiffUsers:
         print("setting up model")
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
-        self.pipeline = AutoPipelineForText2Image.from_pretrained('lykon/dreamshaper-xl-v2-turbo', torch_dtype=torch.float16, variant="fp16")
+        self.pipeline = StableDiffusionXLPipeline.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", torch_dtype=torch.bfloat16)
+        self.pipeline.to(device="cuda", dtype=torch.bfloat16)
 
-        self.pipeline.scheduler = DPMSolverMultistepScheduler.from_config(self.pipeline.scheduler.config)
+        self.unet_state = load_file(hf_hub_download("ByteDance/Hyper-SD", "Hyper-SDXL-1step-Unet.safetensors"), device="cuda")
+        self.pipeline.unet.load_state_dict(self.unet_state)
+        self.pipeline.scheduler = LCMScheduler.from_config(self.pipeline.scheduler.config, timestep_spacing ="trailing")
 
-        self.pipeline.to(self.device)
 
 
-        self.steps = 8
-        self.guidance_scale = 7.5
+        self.steps = 1
+        self.guidance_scale = 0
         self._lock = threading.Lock()
         print("model setup done")
 
@@ -58,7 +62,7 @@ class DiffUsers:
         generator = generator.manual_seed(seed)
         image = self.pipeline(
             prompt="3D icon of a " +prompt.strip(),
-            negative_prompt="lowres, bad anatomy, bad hands, signature, watermarks, ugly, imperfect eyes, skewed eyes, unnatural face, unnatural body, error, extra limb, missing limbs, painting by bad-artist, ugly, blurry, pixelated obscure, unnatural colors, poor lighting, dull, unclear, cropped, lowres, low quality, artifacts, duplicate",
+            # negative_prompt="lowres, bad anatomy, bad hands, signature, watermarks, ugly, imperfect eyes, skewed eyes, unnatural face, unnatural body, error, extra limb, missing limbs, painting by bad-artist, ugly, blurry, pixelated obscure, unnatural colors, poor lighting, dull, unclear, cropped, lowres, low quality, artifacts, duplicate",
             num_inference_steps=self.steps,
             generator=generator,
             guidance_scale=self.guidance_scale,
