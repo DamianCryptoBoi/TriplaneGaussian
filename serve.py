@@ -72,7 +72,7 @@ def init_trial_dir():
 
 @torch.no_grad()
 def infer(image_path: str,
-          cam_dist: float,):
+          cam_dist: float):
     data_cfg = deepcopy(base_cfg.data)
     data_cfg.only_3dgs = True
     data_cfg.cond_camera_distance = cam_dist
@@ -98,7 +98,7 @@ async def generate(prompt: str = Form()):
     save_path = init_trial_dir()
 
     seg_image_path = preprocess(input_image, sam_predictor)
-    infer(seg_image_path, DEFAULT_CAM_DIST, only_3dgs=True)
+    infer(seg_image_path, DEFAULT_CAM_DIST)
     gs = glob.glob(os.path.join(save_path, "3dgs", "*.ply"))[0]
     buffer = io.BytesIO()
     with open(gs, 'rb') as f:
@@ -122,7 +122,7 @@ async def test(
     save_path = init_trial_dir()
 
     seg_image_path = preprocess(input_image, sam_predictor)
-    infer(seg_image_path, DEFAULT_CAM_DIST, only_3dgs=True)
+    infer(seg_image_path, DEFAULT_CAM_DIST)
     gs = glob.glob(os.path.join(save_path, "3dgs", "*.ply"))[0]
     buffer = io.BytesIO()
     with open(gs, 'rb') as f:
