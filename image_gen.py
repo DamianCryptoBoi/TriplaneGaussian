@@ -10,7 +10,7 @@ from omegaconf import OmegaConf
 import base64
 import threading
 from diffusers import AutoPipelineForText2Image, DPMSolverMultistepScheduler
-from diffusers import StableDiffusionXLPipeline, LCMScheduler
+from diffusers import StableDiffusionXLPipeline, LCMScheduler, DDIMScheduler
 import torch
 from pydantic import BaseModel
 from io import BytesIO
@@ -38,21 +38,22 @@ class SampleInput(BaseModel):
 
 class DiffUsers:
     def __init__(self):
+        base_model_id = "stabilityai/stable-diffusion-xl-base-1.0"
+        repo_name = "ByteDance/Hyper-SD"
+        # Take 2-steps lora as an example
+        ckpt_name = "Hyper-SDXL-8steps-CFG-lora.safetensors"
 
         print("setting up model")
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
-        self.pipeline = StableDiffusionXLPipeline.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", torch_dtype=torch.bfloat16)
-        self.pipeline.to(device="cuda", dtype=torch.bfloat16)
-
-        self.unet_state = load_file(hf_hub_download("ByteDance/Hyper-SD", "Hyper-SDXL-1step-Unet.safetensors"), device="cuda")
-        self.pipeline.unet.load_state_dict(self.unet_state)
-        self.pipeline.scheduler = LCMScheduler.from_config(self.pipeline.scheduler.config, timestep_spacing ="trailing")
+        self.pipeline = StableDiffusionXLPipeline.from_pretrained(base_model_id, torch_dtype=torch.float16, variant="fp16").to(self.device)
+        self.pipeline.load_lora_weights(hf_hub_download(repo_name, ckpt_name))
+        self.pipeline.fuse_lora()
+        self.pipeline.scheduler = DDIMScheduler.from_config(self.pipeline.scheduler.config, timestep_spacing="trailing")
 
 
-
-        self.steps = 1
-        self.guidance_scale = 0
+        self.steps = 8
+        self.guidance_scale = 7.5
         self._lock = threading.Lock()
         print("model setup done")
 
