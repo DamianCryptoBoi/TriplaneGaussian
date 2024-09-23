@@ -100,6 +100,6 @@ async def run(image: UploadFile = File(...)):
 if __name__ == "__main__":
     import uvicorn
     parser = argparse.ArgumentParser()
-    parser.add_argument("--port", type=int, default=8000)
+    parser.add_argument("--port", type=int, default=8888)
     args = parser.parse_args()
     uvicorn.run(app, host="0.0.0.0", port=args.port)
