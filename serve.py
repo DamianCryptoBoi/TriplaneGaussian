@@ -102,7 +102,7 @@ async def generate(prompt: str = Form()):
     gs = glob.glob(os.path.join(save_path, "3dgs", "*.ply"))[0]
     buffer = io.BytesIO()
     with open(gs, 'rb') as f:
-        buffer = f.write(f.read())
+        buffer.write(f.read())
     buffer.seek(0)
     buffer = base64.b64encode(buffer.getbuffer()).decode("utf-8")
     response = requests.post("http://localhost:8094/validate_ply/", json={"prompt": validation_prompt, "data": buffer, "data_ver": 1})
@@ -113,8 +113,6 @@ async def generate(prompt: str = Form()):
 @app.post("/test/")
 async def test(
     prompt: str = Form(),
-    # config: OmegaConf = Depends(get_config),
-    # models: list = Depends(get_models),
 ):
     validation_prompt = prompt
     input_image = diffusers.generate_image(prompt)
@@ -126,7 +124,7 @@ async def test(
     gs = glob.glob(os.path.join(save_path, "3dgs", "*.ply"))[0]
     buffer = io.BytesIO()
     with open(gs, 'rb') as f:
-        buffer = f.write(f.read())
+        buffer.write(f.read())
     buffer.seek(0)
     buffer = base64.b64encode(buffer.getbuffer()).decode("utf-8")
     response = requests.post("http://localhost:8094/validate_ply/", json={"prompt": validation_prompt, "data": buffer, "data_ver": 1})
