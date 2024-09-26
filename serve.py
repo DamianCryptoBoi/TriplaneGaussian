@@ -45,16 +45,8 @@ model = TGS(cfg=base_cfg.system).to(device)
 print("load model ckpt done.")
 
 app = FastAPI()
-
-@app.on_event("startup")
-async def startup_event():
-    global sam_predictor
-    sam_predictor = sam_init(SAM_CKPT_PATH, gpu)
-    print("load sam ckpt done.")
-
-def assert_input_image(input_image):
-    if input_image is None:
-        raise HTTPException(status_code=400, detail="No image selected or uploaded!")
+sam_predictor = sam_init(SAM_CKPT_PATH, gpu)
+print("load sam ckpt done.")
 
 def preprocess(input_raw, sam_predictor=None):
     save_path = model.get_save_path("seg_rgba.png")
