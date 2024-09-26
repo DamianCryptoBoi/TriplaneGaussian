@@ -152,7 +152,7 @@ def launch(port):
                 with gr.Row(variant='panel'):
                     seg_image = gr.Image(value=None, width="auto", type="filepath", image_mode="RGBA", label="Segmented Image", interactive=False)
                     output_video = gr.Video(value=None, width="auto", label="Rendered Video", autoplay=True)
-                output_3dgs = gr.Model3D()(value=None, label="3D Model")
+                output_3dgs = gr.Model3D(value=None, label="3D Model")
         
         with gr.Row(variant="panel"):
             gr.Examples(
