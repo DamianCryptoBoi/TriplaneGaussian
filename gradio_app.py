@@ -12,7 +12,7 @@ DEFAULT_CAM_DIST = 1.9
 
 import gradio as gr
 from image_preprocess.utils import image_preprocess, resize_image, sam_out_nosave, pred_bbox, sam_init
-from .gradio_splatting.backend.gradio_model3dgs import Model3DGS
+# from gradio_splatting.backend.gradio_model3dgs import Model3DGS
 from tgs.data import CustomImageOrbitDataset
 from tgs.utils.misc import todevice
 from tgs.utils.config import ExperimentConfig, load_config
@@ -152,7 +152,7 @@ def launch(port):
                 with gr.Row(variant='panel'):
                     seg_image = gr.Image(value=None, width="auto", type="filepath", image_mode="RGBA", label="Segmented Image", interactive=False)
                     output_video = gr.Video(value=None, width="auto", label="Rendered Video", autoplay=True)
-                output_3dgs = Model3DGS(value=None, label="3D Model")
+                output_3dgs = gr.Model3D()(value=None, label="3D Model")
         
         with gr.Row(variant="panel"):
             gr.Examples(
