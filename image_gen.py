@@ -15,4 +15,5 @@ def generate_image(prompt: str):
         input={
             "prompt": "lowpoly 3D icon of a " +prompt+", white background",
         })[0]
+    print("url: ", img_url)
     return load_image_from_url(img_url)
