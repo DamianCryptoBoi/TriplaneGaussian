@@ -8,8 +8,8 @@ imageio==2.21.1
 imageio-ffmpeg==0.4.8
 omegaconf==2.3.0
 einops==0.4.1
-torch==2.1.1
-huggingface_hub==0.19.4
+torch
+huggingface_hub
 diffusers
 accelerate
 transformers==4.38.0
