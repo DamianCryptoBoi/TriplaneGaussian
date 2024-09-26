@@ -45,7 +45,6 @@ model = TGS(cfg=base_cfg.system).to(device)
 print("load model ckpt done.")
 
 app = FastAPI()
-diffusers = DiffUsers()
 
 @app.on_event("startup")
 async def startup_event():
