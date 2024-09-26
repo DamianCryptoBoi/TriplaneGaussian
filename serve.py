@@ -108,11 +108,13 @@ async def test(
 ):
     start_time = time.time()
     validation_prompt = prompt
+    print("Generating image")
+    print(f"Prompt: {prompt.strip()}")
     input_image = generate_image(prompt)
-
+    print("Image generated")
     save_path = init_trial_dir()
-
     seg_image_path = preprocess(input_image, sam_predictor)
+    print("Image preprocessed")
     infer(seg_image_path, DEFAULT_CAM_DIST)
     gs = glob.glob(os.path.join(save_path, "3dgs", "*.ply"))[0]
     buffer = io.BytesIO()

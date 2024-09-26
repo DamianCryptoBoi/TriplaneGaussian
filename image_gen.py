@@ -13,6 +13,6 @@ def generate_image(prompt: str):
     print("Generating image")
     img_url = replicate.run("black-forest-labs/flux-schnell",
         input={
-            "prompt": "3D icon portrait of a " +prompt+", white background",
+            "prompt": "lowpoly 3D icon of a " +prompt+", white background",
         })[0]
     return load_image_from_url(img_url)
