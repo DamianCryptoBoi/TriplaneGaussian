@@ -36,3 +36,4 @@ roma
 openai
 segment_anything
 jaxtyping
+replicate

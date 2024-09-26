@@ -20,7 +20,7 @@ from tgs.data import CustomImageOrbitDataset
 from tgs.utils.misc import todevice
 from tgs.utils.config import ExperimentConfig, load_config
 from infer import TGS
-from image_gen import DiffUsers
+from image_gen import generate_image
 import base64
 import requests
 import io
@@ -91,25 +91,25 @@ def infer(image_path: str,
         batch = todevice(batch, device)
         model(batch)
 
-@app.post("/generate")
-async def generate(prompt: str = Form()):
-    validation_prompt = prompt
-    input_image = diffusers.generate_image(prompt)
+# @app.post("/generate")
+# async def generate(prompt: str = Form()):
+#     validation_prompt = prompt
+#     input_image = diffusers.generate_image(prompt)
 
-    save_path = init_trial_dir()
+#     save_path = init_trial_dir()
 
-    seg_image_path = preprocess(input_image, sam_predictor)
-    infer(seg_image_path, DEFAULT_CAM_DIST)
-    gs = glob.glob(os.path.join(save_path, "3dgs", "*.ply"))[0]
-    buffer = io.BytesIO()
-    with open(gs, 'rb') as f:
-        buffer.write(f.read())
-    buffer.seek(0)
-    buffer = base64.b64encode(buffer.getbuffer()).decode("utf-8")
-    response = requests.post("http://localhost:8094/validate_ply/", json={"prompt": validation_prompt, "data": buffer, "data_ver": 1})
-    score = response.json().get("score", 0)
-    print(f"Prompt: {prompt.strip()}, Score: {score}")
-    return buffer
+#     seg_image_path = preprocess(input_image, sam_predictor)
+#     infer(seg_image_path, DEFAULT_CAM_DIST)
+#     gs = glob.glob(os.path.join(save_path, "3dgs", "*.ply"))[0]
+#     buffer = io.BytesIO()
+#     with open(gs, 'rb') as f:
+#         buffer.write(f.read())
+#     buffer.seek(0)
+#     buffer = base64.b64encode(buffer.getbuffer()).decode("utf-8")
+#     response = requests.post("http://localhost:8094/validate_ply/", json={"prompt": validation_prompt, "data": buffer, "data_ver": 1})
+#     score = response.json().get("score", 0)
+#     print(f"Prompt: {prompt.strip()}, Score: {score}")
+#     return buffer
 
 @app.post("/test/")
 async def test(
@@ -117,7 +117,7 @@ async def test(
 ):
     start_time = time.time()
     validation_prompt = prompt
-    input_image = diffusers.generate_image(prompt)
+    input_image = generate_image(prompt)
 
     save_path = init_trial_dir()
 
