@@ -122,7 +122,7 @@ async def test(
         buffer.write(f.read())
     buffer.seek(0)
     buffer = base64.b64encode(buffer.getbuffer()).decode("utf-8")
-    response = requests.post("http://localhost:8094/validate_ply/", json={"prompt": validation_prompt, "data": buffer, "data_ver": 1})
+    response = requests.post("http://localhost:8094/validate_ply/", json={"prompt": validation_prompt, "data": buffer})
     score = response.json().get("score", 0)
     end_time = time.time()
     print(f"Prompt: {prompt.strip()}, Score: {score}")

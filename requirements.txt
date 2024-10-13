@@ -36,4 +36,4 @@ roma
 openai
 segment_anything
 jaxtyping
-replicate
+replicate==0.34.2
