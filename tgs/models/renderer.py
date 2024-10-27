@@ -104,11 +104,20 @@ class GaussianModel(NamedTuple):
         for i in range(self.rotation.shape[1]):
             l.append('rot_{}'.format(i))
         return l
-
+    
     def save_ply(self, path):
-        
+        # Define the 90-degree rotation matrix around the Z-axis
+        rotation_matrix = np.array([
+            [0, -1, 0],
+            [1, 0, 0],
+            [0, 0, 1]
+        ])
+    
+        # Apply the rotation to the xyz coordinates
         xyz = self.xyz.detach().cpu().numpy()
-        normals = np.zeros_like(xyz)
+        xyz_rotated = np.dot(xyz, rotation_matrix.T)
+    
+        normals = np.zeros_like(xyz_rotated)
         features_dc = self.shs[:, :1]
         features_rest = self.shs[:, 1:]
         f_dc = features_dc.detach().flatten(start_dim=1).contiguous().cpu().numpy()
@@ -116,11 +125,11 @@ class GaussianModel(NamedTuple):
         opacities = inverse_sigmoid(torch.clamp(self.opacity, 1e-3, 1 - 1e-3).detach().cpu().numpy())
         scale = np.log(self.scaling.detach().cpu().numpy())
         rotation = self.rotation.detach().cpu().numpy()
-
+    
         dtype_full = [(attribute, 'f4') for attribute in self.construct_list_of_attributes()]
-
-        elements = np.empty(xyz.shape[0], dtype=dtype_full)
-        attributes = np.concatenate((xyz, normals, f_dc, f_rest, opacities, scale, rotation), axis=1)
+    
+        elements = np.empty(xyz_rotated.shape[0], dtype=dtype_full)
+        attributes = np.concatenate((xyz_rotated, normals, f_dc, f_rest, opacities, scale, rotation), axis=1)
         elements[:] = list(map(tuple, attributes))
         el = PlyElement.describe(elements, 'vertex')
         PlyData([el]).write(path)
