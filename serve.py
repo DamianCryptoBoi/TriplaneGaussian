@@ -13,7 +13,7 @@ from typing import Optional
 import time
 
 CACHE_EXAMPLES = os.environ.get("CACHE_EXAMPLES", "0") == "1"
-DEFAULT_CAM_DIST = 1.9
+DEFAULT_CAM_DIST = 2.5
 
 from image_preprocess.utils import image_preprocess, resize_image, sam_out_nosave, pred_bbox, sam_init
 from tgs.data import CustomImageOrbitDataset
