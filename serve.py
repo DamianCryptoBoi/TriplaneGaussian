@@ -25,6 +25,10 @@ import base64
 import requests
 import io
 from huggingface_hub import hf_hub_download
+import rembg
+from PIL import Image
+import uuid
+
 MODEL_CKPT_PATH = hf_hub_download(repo_id="VAST-AI/TriplaneGaussian", local_dir="./checkpoints", filename="model_lvis_rel.ckpt", repo_type="model")
 SAM_CKPT_PATH = "checkpoints/sam_vit_h_4b8939.pth"
 CONFIG = "config.yaml"
@@ -45,17 +49,18 @@ model = TGS(cfg=base_cfg.system).to(device)
 print("load model ckpt done.")
 
 app = FastAPI()
-sam_predictor = sam_init(SAM_CKPT_PATH, gpu)
-print("load sam ckpt done.")
+# sam_predictor = sam_init(SAM_CKPT_PATH, gpu)
+bg_remover = rembg.new_session('u2net',['CUDAExecutionProvider'])
+print(bg_remover.inner_session.get_providers())
 
-def preprocess(input_raw, sam_predictor=None):
-    save_path = model.get_save_path("seg_rgba.png")
-    input_raw = resize_image(input_raw, 512)
-    image_sam = sam_out_nosave(
-        sam_predictor, input_raw.convert("RGB"), pred_bbox(input_raw)
-    )
-    image_preprocess(image_sam, save_path, lower_contrast=False, rescale=True)
-    return save_path
+# def preprocess(input_raw, sam_predictor=None):
+#     save_path = model.get_save_path("seg_rgba.png")
+#     input_raw = resize_image(input_raw, 512)
+#     image_sam = sam_out_nosave(
+#         sam_predictor, input_raw.convert("RGB"), pred_bbox(input_raw)
+#     )
+#     image_preprocess(image_sam, save_path, lower_contrast=False, rescale=True)
+#     return save_path
 
 def init_trial_dir():
     trial_dir = tempfile.TemporaryDirectory(dir=EXP_ROOT_DIR).name
@@ -111,11 +116,16 @@ async def test(
     print("Generating image")
     print(f"Prompt: {prompt.strip()}")
     input_image = generate_image(prompt)
+    input_image = Image.open(input_image)
+    output = rembg.remove(input,session=bg_remover)
+    tmp_img_path = os.path.join("/tmp", str(uuid.uuid4()) + ".png")
+    output.save(tmp_img_path)
     print("Image generated")
     save_path = init_trial_dir()
-    seg_image_path = preprocess(input_image, sam_predictor)
+    # seg_image_path = preprocess(input_image, sam_predictor)
+
     print("Image preprocessed")
-    infer(seg_image_path, DEFAULT_CAM_DIST)
+    infer(tmp_img_path, DEFAULT_CAM_DIST)
     gs = glob.glob(os.path.join(save_path, "3dgs", "*.ply"))[0]
     buffer = io.BytesIO()
     with open(gs, 'rb') as f:
