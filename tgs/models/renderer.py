@@ -106,10 +106,10 @@ class GaussianModel(NamedTuple):
         return l
     
     def save_ply(self, path):
-        # Define the 90-degree rotation matrix around the Z-axis
+        # Define the 90-degree rotation matrix for counterclockwise rotation around the Z-axis
         rotation_matrix = np.array([
-            [0, -1, 0],
-            [1, 0, 0],
+            [0, 1, 0],
+            [-1, 0, 0],
             [0, 0, 1]
         ])
     
